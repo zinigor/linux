@@ -385,6 +385,12 @@ static int set_sync_ep_implicit_fb_quirk(struct snd_usb_substream *subs,
 		ep = 0x82;
 		ifnum = 0;
 		goto add_sync_ep_from_ifnum;
+	case USB_ID(0x1235, 0x8212): /* Focusrite Scarlett 4i4 3rd Gen */
+	case USB_ID(0x1235, 0x8213): /* Focusrite Scarlett 8i6 3rd Gen */
+	case USB_ID(0x1235, 0x8215): /* Focusrite Scarlett 18i20 3rd Gen */
+		ep = 0x81;
+		ifnum = 2;
+		goto add_sync_ep_from_ifnum;
 	case USB_ID(0x0582, 0x01d8): /* BOSS Katana */
 		/* BOSS Katana amplifiers do not need quirks */
 		return 0;
@@ -407,10 +413,11 @@ static int set_sync_ep_implicit_fb_quirk(struct snd_usb_substream *subs,
 add_sync_ep_from_ifnum:
 	iface = usb_ifnum_to_if(dev, ifnum);
 
-	if (!iface || iface->num_altsetting < 2)
+	if (!iface || subs->altset_idx == 0 ||
+	    subs->altset_idx >= iface->num_altsetting)
 		return -EINVAL;
 
-	alts = &iface->altsetting[1];
+	alts = &iface->altsetting[subs->altset_idx];
 
 add_sync_ep:
 	subs->sync_endpoint = snd_usb_add_endpoint(subs->stream->chip,
